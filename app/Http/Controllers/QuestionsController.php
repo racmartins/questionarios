@@ -1,14 +1,14 @@
 <?php
-
 namespace App\Http\Controllers;
-
-use App\Http\Requests\AskQuestionRequest;
 use App\Question;
-use Illuminate\Auth\Access\Gate;
 use Illuminate\Http\Request;
+use App\Http\Requests\AskQuestionRequest;
 
 class QuestionsController extends Controller
 {
+    public function __construct() {
+        $this->middleware('auth', ['except' => ['index', 'show']]);
+    }
     /**
      * Display a listing of the resource.
      *
@@ -16,11 +16,9 @@ class QuestionsController extends Controller
      */
     public function index()
     {
-        $questions = Question::with('user')->latest()->paginate(5);
-        //return view('questions.index', compact('questions'));
+        $questions = Question::with('user')->latest()->paginate(10);
         return view('questions.index', compact('questions'));
     }
-
     /**
      * Show the form for creating a new resource.
      *
@@ -31,7 +29,6 @@ class QuestionsController extends Controller
         $question = new Question();
         return view('questions.create', compact('question'));
     }
-
     /**
      * Store a newly created resource in storage.
      *
@@ -43,7 +40,6 @@ class QuestionsController extends Controller
         $request->user()->questions()->create($request->only('title', 'body'));
         return redirect()->route('questions.index')->with('success', "A sua questão foi submetida");
     }
-
     /**
      * Display the specified resource.
      *
@@ -55,7 +51,6 @@ class QuestionsController extends Controller
         $question->increment('views');
         return view('questions.show', compact('question'));
     }
-
     /**
      * Show the form for editing the specified resource.
      *
@@ -64,11 +59,8 @@ class QuestionsController extends Controller
      */
     public function edit(Question $question)
     {
-        if(\Gate::denies('update-question',$question)){
-           abort(403,"Acesso negado");
-        }
+        $this->authorize("update", $question);
         return view("questions.edit", compact('question'));
-
     }
     /**
      * Update the specified resource in storage.
@@ -79,13 +71,17 @@ class QuestionsController extends Controller
      */
     public function update(AskQuestionRequest $request, Question $question)
     {
-        if (\Gate::denies('update-question', $question)) {
-            abort(403, "Acesso negado");
-        }
+        $this->authorize("update", $question);
         $question->update($request->only('title', 'body'));
+        if ($request->expectsJson())
+        {
+            return response()->json([
+                'message' => "A sua questão foi atualizada.",
+                'body_html' => $question->body_html
+            ]);
+        }
         return redirect('/questions')->with('success', "A sua questão foi atualizada.");
     }
-
     /**
      * Remove the specified resource from storage.
      *
@@ -94,10 +90,9 @@ class QuestionsController extends Controller
      */
     public function destroy(Question $question)
     {
-         if(\Gate::denies('delete-question',$question)){
-           abort(403,"Acesso negado");
-        }
-         $question->delete();
-         return redirect('/questions')->with('success', "A sua questão foi removida.");
+        $this->authorize("delete", $question);
+        $question->delete();
+
+        return redirect('/questions')->with('success', "A sua questão foi removida.");
     }
 }

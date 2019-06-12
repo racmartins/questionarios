@@ -9,11 +9,10 @@ class Question extends Model
 {
 	protected $fillable = ['title', 'body'];
 
+
+
     public function user(){
     	return $this->belongsTo(User::class);
-    }
-    public function answers(){
-    	return $this->hasMany(Answer::class);
     }
     public function setTitleAttribute($value)
     {
@@ -28,9 +27,9 @@ class Question extends Model
     {
         return $this->created_at->diffForHumans(); //criado à um mês/um ano ou o que seja
     }
-   public function getStatusAttribute()
+    public function getStatusAttribute()
     {
-        if ($this->answers > 0) {
+        if ($this->answers_count > 0) {
             if ($this->best_answer_id) {
                 return "answered-accepted";
             }
@@ -41,4 +40,22 @@ class Question extends Model
     public function getBodyHtmlAttribute(){
         return \Parsedown::instance()->text($this->body);
     }
+    public function answers(){
+    	return $this->hasMany(Answer::class)->orderBy('votes_count', 'DESC');;
+    }
+
+    public function getExcerptAttribute()
+    {
+        return $this->excerpt(250);
+    }
+    public function excerpt($length)
+    {
+        return str_limit(strip_tags($this->bodyHtml()), $length);
+    }
+
+    private function bodyHtml()
+    {
+        return \Parsedown::instance()->text($this->body);
+    }
+
 }
