@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title">
-                        <h1>Editing answer for question: <strong>{{ $question->title }}</strong></h1>
+                        <h1>Editando a resposta para a questão: <strong>{{ $question->title }}</strong></h1>
                     </div>
                     <hr>
                     <form action="{{ route('questions.answers.update', [$question->id, $answer->id]) }}" method="post">
@@ -22,7 +22,7 @@
                             @endif
                         </div>
                         <div class="form-group">
-                            <button type="submit" class="btn btn-lg btn-outline-primary">Update</button>
+                            <button type="submit" class="btn btn-lg btn-outline-primary">Atualizar</button>
                         </div>
                     </form>
                 </div>
